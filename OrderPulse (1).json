@@ -1,0 +1,517 @@
+{
+  "name": "OrderPulse",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "shopify-orders",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -528,
+        16
+      ],
+      "id": "f055b4cf-ec61-4666-8fc7-8892559e8543",
+      "name": "Shopify Order Webhook",
+      "webhookId": "c8e1f5d9-3956-4a88-b931-1baba5a28a74"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v18.0/YOUR_PHONE_NUMBER_ID/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"YOUR_WHATSAPP_NUMBER\",\n  \"type\": \"template\",\n  \"template\": {\n    \"name\": \"hello_world\",\n    \"language\": {\n      \"code\": \"en_US\"\n    }\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -336,
+        16
+      ],
+      "id": "e6d6463d-9279-4163-9094-44f0ef538af6",
+      "name": "WhatsApp Notification",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "YOUR_HEADER_AUTH_ID",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "YOUR_SLACK_WEBHOOK_URL",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"text\": \"\ud83d\udce6 New Shopify Order {{ $('Shopify Order Webhook').first().json.body.name }}\\n*Customer:* {{ $('Shopify Order Webhook').first().json.body.billing_address.first_name }} {{ $('Shopify Order Webhook').first().json.body.billing_address.last_name }}\\n*Amount:* PKR {{ $('Shopify Order Webhook').first().json.body.total_price }}\\n*Email:* {{ $('Shopify Order Webhook').first().json.body.email }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -160,
+        16
+      ],
+      "id": "ffac23aa-cc5b-4567-bf2d-6cfd011065d4",
+      "name": "Slack Alert"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Shopify Orders",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Order ID": "={{ $('Shopify Order Webhook').first().json.body.name }}",
+            "Customer Name": "={{ $('Shopify Order Webhook').first().json.body.billing_address.first_name }} {{ $('Shopify Order Webhook').first().json.body.billing_address.last_name }}",
+            "Email": "={{ $('Shopify Order Webhook').first().json.body.email }}",
+            "Total Price": "={{ $('Shopify Order Webhook').first().json.body.total_price }}",
+            "Items": "={{ $('Shopify Order Webhook').first().json.body.line_items[0].title }}",
+            "Date": "={{ $('Shopify Order Webhook').first().json.body.created_at }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Order ID",
+              "displayName": "Order ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Customer Name",
+              "displayName": "Customer Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Total Price",
+              "displayName": "Total Price",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Items",
+              "displayName": "Items",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        16,
+        16
+      ],
+      "id": "7fe7fa01-4528-49c2-904b-8d59d6005d59",
+      "name": "Log to Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "dataSourceId": {
+          "__rl": true,
+          "value": "YOUR_NOTION_DATABASE_ID",
+          "mode": "list",
+          "cachedResultName": "Orders",
+          "cachedResultUrl": "https://app.notion.com/YOUR_DATABASE_URL"
+        },
+        "title": "={{ $('Shopify Order Webhook').first().json.body.name }}",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Customer|rich_text",
+              "textContent": "={{ $('Shopify Order Webhook').first().json.body.billing_address.first_name }}"
+            },
+            {
+              "key": "Amount|number",
+              "numberValue": "={{ parseFloat($('Shopify Order Webhook').first().json.body.total_price) }}"
+            },
+            {
+              "key": "Items|rich_text",
+              "textContent": "={{ $('Shopify Order Webhook').first().json.body.line_items[0].title }}"
+            },
+            {
+              "key": "Date|date",
+              "date": "={{ $('Shopify Order Webhook').first().json.body.created_at }}"
+            },
+            {
+              "key": "Status|select",
+              "selectValue": "New"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 3,
+      "position": [
+        192,
+        16
+      ],
+      "id": "8985a436-063f-4a1f-a5e9-4923eb3e53dc",
+      "name": "Update Notion Dashboard",
+      "credentials": {
+        "notionApi": {
+          "id": "YOUR_NOTION_CREDENTIAL_ID",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 20
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -608,
+        288
+      ],
+      "id": "0a697c71-3e7a-4d73-a059-1f1cacc824a8",
+      "name": "Daily Summary Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Shopify Orders",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -432,
+        288
+      ],
+      "id": "01552d34-ba78-4d80-af71-99e2298954ca",
+      "name": "Fetch Daily Orders",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -256,
+        288
+      ],
+      "id": "ad160886-7e97-49fb-aaf6-36aab921e708",
+      "name": "Combine Orders"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"openai/gpt-oss-20b\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are an e-commerce analyst. Give a concise daily summary based on the order data provided.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Here is today's order data from our Shopify store: {{ $('Combine Orders').first().json.data.map(o => `Order ${o['Order ID']} - Customer: ${o['Customer Name']} - Item: ${o['Items']} - Price: ${o['Total Price']}`).join(', ') }}. Please summarize: total orders, total revenue, most ordered item, and one business insight.\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -80,
+        288
+      ],
+      "id": "58bb4d7f-9c26-43cf-9762-22d6ff411a83",
+      "name": "Groq AI Summary",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "YOUR_GROQ_CREDENTIAL_ID",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const today = new Date().toLocaleDateString('en-PK', {\n  weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'\n});\n\nconst text = $input.first().json.choices[0].message.content;\n\nlet html = text;\n\n// Step 1 \u2014 Convert markdown tables to HTML (handles all variations)\nconst lines = html.split('\\n');\nlet result = [];\nlet inTable = false;\nlet tableBuffer = [];\n\nfor (const line of lines) {\n  const isTableRow = /^\\|.+\\|$/.test(line.trim());\n  const isSeparator = /^\\|[\\s\\-:|\\s]+\\|$/.test(line.trim());\n\n  if (isSeparator) continue; // skip separator rows entirely\n\n  if (isTableRow) {\n    inTable = true;\n    tableBuffer.push(line.trim());\n  } else {\n    if (inTable && tableBuffer.length > 0) {\n      // flush table\n      let tableHtml = '<table style=\"width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;\">';\n      tableBuffer.forEach((row, i) => {\n        const cells = row.split('|').map(c => c.trim()).filter(c => c !== '');\n        if (i === 0) {\n          tableHtml += '<tr>' + cells.map(c =>\n            `<th style=\"padding:12px 16px;background:#0a5c44;color:white;font-weight:600;border:1px solid #085040;text-align:left;\">${c}</th>`\n          ).join('') + '</tr>';\n        } else {\n          const bg = i % 2 === 0 ? '#ffffff' : '#f0faf6';\n          tableHtml += '<tr>' + cells.map(c =>\n            `<td style=\"padding:10px 16px;border:1px solid #d0e8e0;background:${bg};color:#333;\">${c}</td>`\n          ).join('') + '</tr>';\n        }\n      });\n      tableHtml += '</table>';\n      result.push(tableHtml);\n      tableBuffer = [];\n      inTable = false;\n    }\n    result.push(line);\n  }\n}\n\n// flush any remaining table\nif (tableBuffer.length > 0) {\n  let tableHtml = '<table style=\"width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;\">';\n  tableBuffer.forEach((row, i) => {\n    const cells = row.split('|').map(c => c.trim()).filter(c => c !== '');\n    if (i === 0) {\n      tableHtml += '<tr>' + cells.map(c =>\n        `<th style=\"padding:12px 16px;background:#0a5c44;color:white;font-weight:600;border:1px solid #085040;text-align:left;\">${c}</th>`\n      ).join('') + '</tr>';\n    } else {\n      const bg = i % 2 === 0 ? '#ffffff' : '#f0faf6';\n      tableHtml += '<tr>' + cells.map(c =>\n        `<td style=\"padding:10px 16px;border:1px solid #d0e8e0;background:${bg};color:#333;\">${c}</td>`\n      ).join('') + '</tr>';\n    }\n  });\n  tableHtml += '</table>';\n  result.push(tableHtml);\n}\n\nhtml = result.join('\\n');\n\n// Step 2 \u2014 Bold\nhtml = html.replace(/\\*\\*(.*?)\\*\\*/g, '<strong style=\"color:#0a5c44;\">$1</strong>');\n\n// Step 3 \u2014 Italic\nhtml = html.replace(/\\*(.*?)\\*/g, '<em>$1</em>');\n\n// Step 4 \u2014 Headings\nhtml = html.replace(/^### (.+)$/gm, '<h3 style=\"color:#0a5c44;font-size:15px;margin:18px 0 8px;\">$1</h3>');\nhtml = html.replace(/^## (.+)$/gm, '<h2 style=\"color:#0a5c44;font-size:17px;margin:20px 0 10px;\">$1</h2>');\nhtml = html.replace(/^# (.+)$/gm, '<h1 style=\"color:#0a5c44;font-size:20px;margin:22px 0 12px;\">$1</h1>');\n\n// Step 5 \u2014 Bullet points\nhtml = html.replace(/^[-*] (.+)$/gm,\n  '<div style=\"display:flex;gap:8px;margin:6px 0;line-height:1.6;\"><span style=\"color:#16a86b;font-weight:700;flex-shrink:0;\">\u2022</span><span style=\"color:#333;\">$1</span></div>'\n);\n\n// Step 6 \u2014 Paragraphs and line breaks\nhtml = html.replace(/\\n\\n/g, '</p><p style=\"margin:10px 0;line-height:1.8;color:#333;\">');\nhtml = html.replace(/\\n/g, '<br>');\n\nconst fullHtml = `<!DOCTYPE html>\n<html>\n<body style=\"margin:0;padding:0;background:#f0f4f8;font-family:Arial,sans-serif;\">\n<div style=\"max-width:620px;margin:40px auto;background:white;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);\">\n\n  <div style=\"background:linear-gradient(135deg,#0a5c44,#16a86b);padding:36px 40px;text-align:center;\">\n    <div style=\"font-size:11px;font-weight:600;letter-spacing:3px;color:#a8f0d0;text-transform:uppercase;margin-bottom:10px;\">OrderPulse</div>\n    <h1 style=\"color:white;font-size:26px;margin:0 0 8px;font-weight:700;\">Daily Orders Report</h1>\n    <div style=\"color:#d0f5e8;font-size:13px;\">${today}</div>\n  </div>\n\n  <div style=\"display:flex;background:#f8fdfb;border-bottom:1px solid #d0e8e0;\">\n    <div style=\"flex:1;padding:20px;text-align:center;border-right:1px solid #d0e8e0;\">\n      <div style=\"font-size:11px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;\">Platform</div>\n      <div style=\"font-size:18px;font-weight:700;color:#0a5c44;\">Shopify</div>\n    </div>\n    <div style=\"flex:1;padding:20px;text-align:center;border-right:1px solid #d0e8e0;\">\n      <div style=\"font-size:11px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;\">Powered by</div>\n      <div style=\"font-size:18px;font-weight:700;color:#0a5c44;\">Groq AI</div>\n    </div>\n    <div style=\"flex:1;padding:20px;text-align:center;\">\n      <div style=\"font-size:11px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;\">Frequency</div>\n      <div style=\"font-size:18px;font-weight:700;color:#0a5c44;\">Daily</div>\n    </div>\n  </div>\n\n  <div style=\"padding:32px 40px;\">\n    <p style=\"margin:10px 0;line-height:1.8;color:#333;\">${html}</p>\n  </div>\n\n  <div style=\"background:#0a5c44;padding:24px 40px;text-align:center;\">\n    <div style=\"color:white;font-size:14px;font-weight:700;margin-bottom:4px;\">OrderPulse</div>\n    <div style=\"color:#a8f0d0;font-size:11px;letter-spacing:1px;\">Shopify \u00b7 Groq AI \u00b7 Notion \u00b7 Slack \u00b7 Google Sheets \u00b7 n8n</div>\n  </div>\n\n</div>\n</body>\n</html>`;\n\nreturn [{ json: { htmlBody: fullHtml } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        96,
+        288
+      ],
+      "id": "f6009d5d-4ddb-4931-8bb8-2649e661daf3",
+      "name": "Format HTML Email"
+    },
+    {
+      "parameters": {
+        "sendTo": "YOUR_EMAIL_ADDRESS",
+        "subject": "=Daily Orders Report \u2014 {{ $now.toFormat('dd MMM yyyy') }}",
+        "message": "={{ $json.htmlBody }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        272,
+        288
+      ],
+      "id": "b1be9034-b7e2-4cb1-914a-4b914865b048",
+      "name": "Send Daily Report",
+      "webhookId": "ba2ef3f1-12b8-48f8-a19b-05bc0145d69c",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "\ud83d\uded2 OrderPulse\nReal-time Shopify order monitoring with AI-powered daily reports\n",
+        "height": 624,
+        "width": 1136,
+        "color": "#201818"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -672,
+        -176
+      ],
+      "typeVersion": 1,
+      "id": "707cbbe9-75f6-4b97-b878-d592e4cda934",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "\ud83d\udcca DAILY AI SUMMARY BRANCH\nRuns every day at 8PM. Reads all orders from Google Sheets,\ngenerates an AI summary using Groq, and emails a formatted report.",
+        "height": 240,
+        "width": 1104,
+        "color": "#7FEA71"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -656,
+        192
+      ],
+      "typeVersion": 1,
+      "id": "146424d0-d8a7-4970-9fc9-96a798aa3e5b",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "\ud83d\udcca DAILY AI SUMMARY BRANCH\nRuns every day at 8PM. Reads all orders from Google Sheets,\ngenerates an AI summary using Groq, and emails a formatted report.",
+        "height": 256,
+        "width": 960,
+        "color": "#50A4B9"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -576,
+        -80
+      ],
+      "typeVersion": 1,
+      "id": "263c58aa-341a-455c-bebe-aff9ae3ed4e3",
+      "name": "Sticky Note2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Shopify Order Webhook": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WhatsApp Notification": {
+      "main": [
+        [
+          {
+            "node": "Slack Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack Alert": {
+      "main": [
+        [
+          {
+            "node": "Log to Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log to Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Update Notion Dashboard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Daily Summary Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Daily Orders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Daily Orders": {
+      "main": [
+        [
+          {
+            "node": "Combine Orders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine Orders": {
+      "main": [
+        [
+          {
+            "node": "Groq AI Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq AI Summary": {
+      "main": [
+        [
+          {
+            "node": "Format HTML Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format HTML Email": {
+      "main": [
+        [
+          {
+            "node": "Send Daily Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Daily Report": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "80bf52af-d5f5-4bc8-be6b-4bd1a0eaedf5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "YOUR_INSTANCE_ID"
+  },
+  "nodeGroups": [],
+  "id": "Q9dQBjZj80j6kLCT",
+  "tags": []
+}
